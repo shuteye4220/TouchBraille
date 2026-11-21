@@ -6,12 +6,11 @@ Input goes through NVDA's own braille input, so your input table and contracted 
 
 ## Install
 
-Download `touchBraille-0.1.0.nvda-addon` from this repo and open it on the device to install. NVDA's touch support needs an installed copy of NVDA, not a portable one.
+Download `touchBraille-0.1.1.nvda-addon` from this repo and open it on the device to install. NVDA's touch support needs an installed copy of NVDA, not a portable one.
 
 ## Turning it on and off
 
-- Five-finger double tap turns the keyboard on or off.
-- Or three-finger tap to cycle touch modes until you hear "braille keyboard mode".
+- Five-finger double tap turns the keyboard on or off. You can change this in NVDA's Input Gestures dialog, under Touch Braille.
 - Two-finger swipe down turns it off from inside the keyboard.
 
 While the keyboard is on, all touches go to it; other NVDA touch gestures don't work until you turn it off.

@@ -10,7 +10,6 @@ import globalPluginHandler
 import inputCore
 import keyboardHandler
 import tones
-import touchHandler
 import touchTracker
 import ui
 import wx
@@ -32,8 +31,6 @@ config.conf.spec[CONF_SECTION] = {
 	"calibration6": 'string(default="")',
 	"calibration8": 'string(default="")',
 }
-
-TOUCH_MODE = "braille"
 
 # (direction, number of fingers) -> action name
 SWIPES = {
@@ -148,8 +145,6 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		super().__init__()
 		_plugin = self
 		self._userActive = False
-		self._prevTouchMode = None
-		self._modeRegistered = False
 		self._originalUpdate = None
 		self.engine = TouchBrailleEngine(
 			onDots=self._onDots,
@@ -161,14 +156,12 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		self.loadConfig()
 		config.post_configProfileSwitch.register(self.loadConfig)
 		NVDASettingsDialog.categoryClasses.append(TouchBrailleSettingsPanel)
-		self._registerTouchMode()
 		self._patchTracker()
 
 	def terminate(self):
 		global _plugin
 		self._deactivate()
 		self._unpatchTracker()
-		self._unregisterTouchMode()
 		try:
 			NVDASettingsDialog.categoryClasses.remove(TouchBrailleSettingsPanel)
 		except ValueError:
@@ -197,68 +190,19 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			spaceTop=spaceTop,
 		)
 
-	# Touch modes
-
-	def _registerTouchMode(self):
-		"""Add "braille keyboard mode" to the modes NVDA's 3-finger tap cycles through."""
-		try:
-			if TOUCH_MODE not in touchHandler.availableTouchModes:
-				touchHandler.availableTouchModes.append(TOUCH_MODE)
-			# Translators: announced when cycling to this touch mode.
-			touchHandler.touchModeLabels[TOUCH_MODE] = _("braille keyboard mode")
-			self._modeRegistered = True
-		except Exception:
-			log.debugWarning("Touch Braille: could not register a touch mode", exc_info=True)
-
-	def _unregisterTouchMode(self):
-		if not self._modeRegistered:
-			return
-		try:
-			if self._currentTouchMode() == TOUCH_MODE:
-				self._setTouchMode("object")
-			touchHandler.availableTouchModes.remove(TOUCH_MODE)
-			touchHandler.touchModeLabels.pop(TOUCH_MODE, None)
-		except Exception:
-			log.debugWarning("Touch Braille: could not unregister touch mode", exc_info=True)
-		self._modeRegistered = False
-
-	def _currentTouchMode(self):
-		handler = touchHandler.handler
-		return getattr(handler, "_curTouchMode", None) if handler else None
-
-	def _setTouchMode(self, mode):
-		handler = touchHandler.handler
-		if not handler:
-			return
-		setter = getattr(handler, "setMode", None)
-		try:
-			if setter:
-				setter(mode)
-			else:
-				handler._curTouchMode = mode
-		except ValueError:
-			# Mode not registered on this NVDA version; the add-on's own flag still works.
-			pass
+	# On and off
 
 	def _isCapturing(self):
-		return self._userActive or self._currentTouchMode() == TOUCH_MODE
+		return self._userActive
 
 	def _activate(self):
-		mode = self._currentTouchMode()
-		if mode != TOUCH_MODE:
-			self._prevTouchMode = mode
 		self.engine.reset()
 		self._userActive = True
-		if self._modeRegistered:
-			self._setTouchMode(TOUCH_MODE)
 
 	def _deactivate(self):
 		self._userActive = False
 		self.engine.reset()
 		self.engine.calibrating = False
-		if self._currentTouchMode() == TOUCH_MODE:
-			self._setTouchMode(self._prevTouchMode or "object")
-		self._prevTouchMode = None
 
 	# Raw touch interception
 
@@ -368,7 +312,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 	@script(
 		# Translators: input help for the toggle command.
 		description=_("Turns the touch braille keyboard on or off"),
-		gesture="ts:5finger_doubleTap",
+		gesture="ts:5finger_double_tap",
 	)
 	def script_toggleTouchBraille(self, gesture):
 		if self._isCapturing():
