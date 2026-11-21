@@ -1,0 +1,43 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Test chord recognition
+        run: python -I tests/test_engine.py
+      - name: Check the committed add-on file matches the source
+        run: python -I build.py --check
+      - name: Build
+        run: python -I build.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: touchBraille
+          path: "*.nvda-addon"
+
+  release:
+    # Runs only when you push a version tag, such as v0.1.0.
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create release with the add-on file
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" *.nvda-addon --title "Touch Braille $GITHUB_REF_NAME" --generate-notes

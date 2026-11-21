@@ -6,7 +6,7 @@ Input goes through NVDA's own braille input, so your input table and contracted 
 
 ## Install
 
-Build the `.nvda-addon` file with `python build.py` (see Development below) and open it on the device to install. NVDA's touch support needs an installed copy of NVDA, not a portable one.
+Download `touchBraille-0.1.0.nvda-addon` from this repo and open it on the device to install. NVDA's touch support needs an installed copy of NVDA, not a portable one.
 
 ## Turning it on and off
 
@@ -63,7 +63,10 @@ The chord logic in `engine.py` has no NVDA imports, so it can be tested anywhere
 ```
 python tests/test_engine.py   # chord, swipe, space bar and calibration tests
 python build.py               # builds touchBraille-<version>.nvda-addon
+python build.py --check       # confirms the committed .nvda-addon matches the source
 ```
+
+The built `.nvda-addon` file is committed to the repo, so rebuild it after changing the source. GitHub Actions runs the tests and the check on every push. To make a release, bump `version` in `addon/manifest.ini`, rebuild, commit, then push a tag such as `v0.2.0`; Actions creates the release with the add-on file attached.
 
 ## License
 
