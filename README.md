@@ -6,7 +6,7 @@ Input goes through NVDA's own braille input, so your input table and contracted 
 
 ## Install
 
-Download the latest `.nvda-addon` file from Releases and open it, or build it yourself (see below). NVDA's touch support needs an installed copy of NVDA, not a portable one.
+Build the `.nvda-addon` file with `python build.py` (see Development below) and open it on the device to install. NVDA's touch support needs an installed copy of NVDA, not a portable one.
 
 ## Turning it on and off
 
